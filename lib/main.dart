@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'screens/dashboard_screen.dart';
 
 void main() {
   runApp(VendorApp());
@@ -13,9 +13,14 @@ class VendorApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: Color(0xFF121212),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.dark,
+        ),
       ),
-      home: HomeScreen(),
+      home: DashboardScreen(),
     );
   }
 }

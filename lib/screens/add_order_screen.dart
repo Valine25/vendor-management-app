@@ -7,7 +7,7 @@ class AddOrderScreen extends StatefulWidget {
   AddOrderScreen({required this.vendor});
 
   @override
-  State<AddOrderScreen> createState() => _AddOrderScreenState();
+  _AddOrderScreenState createState() => _AddOrderScreenState();
 }
 
 class _AddOrderScreenState extends State<AddOrderScreen> {
@@ -18,13 +18,14 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   DateTime selectedDate = DateTime.now();
 
   Future<void> pickDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
+      builder: (context, child) => Theme(data: ThemeData.dark(), child: child!),
     );
-    if (picked != null && picked != selectedDate) {
+    if (picked != null) {
       setState(() {
         selectedDate = picked;
       });
@@ -39,91 +40,122 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
         date: selectedDate,
         status: selectedStatus,
       );
-
       widget.vendor.orders.add(newOrder);
-      Navigator.pop(context, true); // return success
+      Navigator.pop(context, true);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Add Order")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              buildTextField("Product Name", productController),
-              buildTextField("Quantity", quantityController,
-                  isNumber: true),
-              buildDatePicker(context),
-              buildDropdown(),
-              SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: saveOrder,
-                icon: Icon(Icons.check),
-                label: Text("Save Order"),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildTextField(String label, TextEditingController controller,
-      {bool isNumber = false}) {
+  Widget buildTextField(
+    String label,
+    TextEditingController controller, {
+    bool isNumber = false,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
         controller: controller,
-        decoration:
-            InputDecoration(labelText: label, border: OutlineInputBorder()),
+        style: TextStyle(color: Colors.white),
         keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.white70),
+          filled: true,
+          fillColor: Color(0xFF2A2A2A),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
         validator: (value) =>
-            (value == null || value.isEmpty) ? "Required" : null,
-      ),
-    );
-  }
-
-  Widget buildDatePicker(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
-            ),
-          ),
-          TextButton(
-            onPressed: () => pickDate(context),
-            child: Text("Select Date"),
-          )
-        ],
+            value == null || value.isEmpty ? "Required" : null,
       ),
     );
   }
 
   Widget buildDropdown() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: DropdownButtonFormField<String>(
         value: selectedStatus,
-        items: ['Pending', 'Delivered', 'Cancelled']
-            .map((status) => DropdownMenuItem(
-                  child: Text(status),
-                  value: status,
-                ))
-            .toList(),
-        onChanged: (value) => setState(() {
-          selectedStatus = value!;
-        }),
+        dropdownColor: Color(0xFF2A2A2A),
+        items: ['Pending', 'Delivered', 'Cancelled'].map((status) {
+          return DropdownMenuItem(
+            value: status,
+            child: Text(status, style: TextStyle(color: Colors.white)),
+          );
+        }).toList(),
+        onChanged: (value) => setState(() => selectedStatus = value!),
         decoration: InputDecoration(
-          labelText: "Status",
-          border: OutlineInputBorder(),
+          labelText: "Order Status",
+          labelStyle: TextStyle(color: Colors.white70),
+          filled: true,
+          fillColor: Color(0xFF2A2A2A),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  Widget buildDatePicker() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
+          style: TextStyle(color: Colors.white),
+        ),
+        TextButton(
+          onPressed: () => pickDate(context),
+          child: Text("Select Date"),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFF121212),
+      appBar: AppBar(title: Text("Add Order"), backgroundColor: Colors.black),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              buildTextField("Product", productController),
+              buildTextField("Quantity", quantityController, isNumber: true),
+              buildDatePicker(),
+              Center(
+                
+                child: SizedBox(
+                  height: 38,
+                  width: 120,
+                  child: ElevatedButton.icon(
+                    onPressed: saveOrder,
+                    icon: Icon(Icons.check, size: 16),
+                    label: Text(
+                      "Save",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurpleAccent,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 1,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

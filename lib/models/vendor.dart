@@ -28,9 +28,9 @@ class Vendor {
     required this.company,
     required this.contact,
     required this.products,
-    this.orders = const [],
+    List<Order>? orders,
     this.feedback = '',
     this.rating = 0,
     this.isInactive = false,
-  });
+  }): this.orders=orders?? [];
 }

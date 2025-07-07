@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/vendor.dart';
-import 'add_order_screen.dart'; // we'll create next
-import 'add_feedback_screen.dart'; // we'll create after that
+import 'add_order_screen.dart';
+import 'add_feedback_screen.dart';
 
 class VendorDetailScreen extends StatefulWidget {
   final Vendor vendor;
@@ -13,90 +13,122 @@ class VendorDetailScreen extends StatefulWidget {
 }
 
 class _VendorDetailScreenState extends State<VendorDetailScreen> {
+  late Vendor vendor;
+  bool isChanged = false;
+
+  @override
+  void initState() {
+    super.initState();
+    vendor = widget.vendor;
+  }
+
   void toggleInactive() {
     setState(() {
-      widget.vendor.isInactive = !widget.vendor.isInactive;
+      vendor.isInactive = !vendor.isInactive;
+      isChanged = true;
     });
+  }
+
+  Future<bool> _onWillPop() async {
+    Navigator.pop(context, isChanged ? vendor : null);
+    return false;
   }
 
   @override
   Widget build(BuildContext context) {
-    final vendor = widget.vendor;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(vendor.name),
-        actions: [
-          IconButton(
-            icon: Icon(
-              vendor.isInactive ? Icons.flag : Icons.flag_outlined,
-              color: vendor.isInactive ? Colors.red : null,
-            ),
-            tooltip: vendor.isInactive ? "Unflag" : "Flag Inactive",
-            onPressed: toggleInactive,
-          )
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            sectionTitle("Vendor Info"),
-            detailRow("Company", vendor.company),
-            detailRow("Contact", vendor.contact),
-            sectionTitle("Products Supplied"),
-            ...vendor.products.map((p) => bulletItem(p)),
-            SizedBox(height: 16),
-            sectionTitle("Feedback & Rating"),
-            Text("Rating: ${vendor.rating}/5"),
-            if (vendor.feedback.isNotEmpty)
-              Text("Feedback: ${vendor.feedback}"),
-            SizedBox(height: 16),
-            sectionTitle("Order History"),
-            if (vendor.orders.isEmpty)
-              Text("No orders yet.")
-            else
-              ...vendor.orders.map((order) => Card(
-                    child: ListTile(
-                      title: Text(order.product),
-                      subtitle: Text(
-                          "Qty: ${order.quantity}, Date: ${order.date.toLocal().toString().split(' ')[0]}"),
-                      trailing: Text(order.status),
-                    ),
-                  )),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AddOrderScreen(vendor: vendor),
-                      ),
-                    );
-                    if (result != null) setState(() {});
-                  },
-                  icon: Icon(Icons.add_shopping_cart),
-                  label: Text("Add Order"),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AddFeedbackScreen(vendor: vendor),
-                      ),
-                    );
-                    if (result != null) setState(() {});
-                  },
-                  icon: Icon(Icons.feedback),
-                  label: Text("Add Feedback"),
-                ),
-              ],
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(vendor.name),
+          actions: [
+            IconButton(
+              icon: Icon(
+                vendor.isInactive ? Icons.flag : Icons.flag_outlined,
+                color: vendor.isInactive ? Colors.red : null,
+              ),
+              tooltip: vendor.isInactive ? "Unflag" : "Flag Inactive",
+              onPressed: toggleInactive,
             )
           ],
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ListView(
+            children: [
+              sectionTitle("Vendor Info"),
+              detailRow("Company", vendor.company),
+              detailRow("Contact", vendor.contact),
+
+              sectionTitle("Products Supplied"),
+              ...vendor.products.map((p) => bulletItem(p)),
+
+              SizedBox(height: 16),
+              sectionTitle("Feedback & Rating"),
+              Text("Rating: ${vendor.rating}/5"),
+              if (vendor.feedback.isNotEmpty)
+                Text("Feedback: ${vendor.feedback}"),
+
+              SizedBox(height: 16),
+              sectionTitle("Order History"),
+              if (vendor.orders.isEmpty)
+                Text("No orders yet.")
+              else
+                ...vendor.orders.map((order) => Card(
+                      color: const Color(0xFF1E1E1E),
+                      child: ListTile(
+                        title: Text(order.product, style: TextStyle(color: Colors.white)),
+                        subtitle: Text(
+                          "Qty: ${order.quantity}, Date: ${order.date.toLocal().toString().split(' ')[0]}",
+                          style: TextStyle(color: Colors.white60),
+                        ),
+                        trailing: Text(order.status, style: TextStyle(color: Colors.tealAccent)),
+                      ),
+                    )),
+
+              SizedBox(height: 20),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AddOrderScreen(vendor: vendor),
+                        ),
+                      );
+                      if (result != null) {
+                        setState(() {
+                          isChanged = true;
+                        });
+                      }
+                    },
+                    icon: Icon(Icons.add_shopping_cart),
+                    label: Text("Add Order"),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AddFeedbackScreen(vendor: vendor),
+                        ),
+                      );
+                      if (result != null) {
+                        setState(() {
+                          isChanged = true;
+                        });
+                      }
+                    },
+                    icon: Icon(Icons.feedback),
+                    label: Text("Add Feedback"),
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );
