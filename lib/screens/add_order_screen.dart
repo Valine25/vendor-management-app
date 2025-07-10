@@ -23,7 +23,8 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
       initialDate: selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
-      builder: (context, child) => Theme(data: ThemeData.dark(), child: child!),
+      builder: (context, child) =>
+          Theme(data: ThemeData.dark(), child: child!),
     );
     if (picked != null) {
       setState(() {
@@ -94,18 +95,21 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   }
 
   Widget buildDatePicker() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
-          style: TextStyle(color: Colors.white),
-        ),
-        TextButton(
-          onPressed: () => pickDate(context),
-          child: Text("Select Date"),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
+            style: TextStyle(color: Colors.white),
+          ),
+          TextButton(
+            onPressed: () => pickDate(context),
+            child: Text("Select Date"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -113,7 +117,10 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF121212),
-      appBar: AppBar(title: Text("Add Order"), backgroundColor: Colors.black),
+      appBar: AppBar(
+        title: Text("Add Order"),
+        backgroundColor: Colors.black,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -123,32 +130,32 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
               buildTextField("Product", productController),
               buildTextField("Quantity", quantityController, isNumber: true),
               buildDatePicker(),
+              buildDropdown(),
+
+              // ✅ Centered Button
               Center(
-                
                 child: SizedBox(
-                  height: 38,
-                  width: 120,
+                  height: 40,
+                  width: 130,
                   child: ElevatedButton.icon(
                     onPressed: saveOrder,
-                    icon: Icon(Icons.check, size: 16),
+                    icon: Icon(Icons.check, size: 18),
                     label: Text(
                       "Save",
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurpleAccent,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      elevation: 1,
+                      elevation: 2,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
