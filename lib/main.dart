@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
-import 'screens/dashboard_screen.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import './screens/dashboard_screen.dart'; 
 
-void main() {
-  runApp(VendorApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
+
+  runApp( MyApp());
 }
 
-class VendorApp extends StatelessWidget {
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Vendor Portal',
+      title: 'Vendor Management',
+      theme: ThemeData.dark(), 
+      home: DashboardScreen(), 
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Color(0xFF121212),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.dark,
-        ),
-      ),
-      home: DashboardScreen(),
     );
   }
 }

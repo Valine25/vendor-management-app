@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/vendor.dart';
+import '../models/order.dart';
+import '../database/db_helper.dart';
 
 class AddOrderScreen extends StatefulWidget {
   final Vendor vendor;
@@ -33,18 +35,22 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
     }
   }
 
-  void saveOrder() {
-    if (_formKey.currentState!.validate()) {
-      final newOrder = Order(
-        product: productController.text,
-        quantity: int.parse(quantityController.text),
-        date: selectedDate,
-        status: selectedStatus,
-      );
-      widget.vendor.orders.add(newOrder);
-      Navigator.pop(context, true);
-    }
+  Future<void>  saveOrder() async {
+  if (_formKey.currentState!.validate()) {
+    final newOrder = Order(
+      vendorId: widget.vendor.id!,
+      product: productController.text,
+      quantity: int.parse(quantityController.text),
+      date: selectedDate,
+      status: selectedStatus,
+    );
+
+    await DBHelper().insertOrder(newOrder, widget.vendor.id!);
+
+   
+    Navigator.pop(context, true);
   }
+}
 
   Widget buildTextField(
     String label,
@@ -131,8 +137,6 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
               buildTextField("Quantity", quantityController, isNumber: true),
               buildDatePicker(),
               buildDropdown(),
-
-              // ✅ Centered Button
               Center(
                 child: SizedBox(
                   height: 40,

@@ -6,8 +6,11 @@ import 'vendor_list_screen.dart';
 import 'order_list_screen.dart';
 import 'feedback_list_screen.dart';
 import '../widgets/custom_sidebar.dart';
+import '../database/db_helper.dart';
 
 class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
+
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -16,9 +19,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Vendor> vendors = [];
   int selectedTab = 0;
 
-  void addVendor(Vendor vendor) {
+  void addVendor(Vendor vendor) async {
+    final db = DBHelper();
+    final id = await db.insertVendor(vendor);
+    vendor.id = id;
     setState(() {
       vendors.add(vendor);
+    });
+    await loadVendorsFromDB(); // refresh to include empty order list
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadVendorsFromDB();
+  }
+
+  Future<void> loadVendorsFromDB() async {
+    final dbVendors = await DBHelper().getAllVendors();
+    setState(() {
+      vendors = dbVendors;
     });
   }
 
@@ -29,7 +49,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF121212),
+      backgroundColor: const Color(0xFF121212),
       body: Row(
         children: [
           CustomSidebar(
@@ -60,8 +80,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   addVendor(result);
                 }
               },
-              child: Icon(Icons.add),
               tooltip: "Add Vendor",
+              child: const Icon(Icons.add),
             )
           : null,
     );
@@ -69,77 +89,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget getCurrentTab() {
     if (selectedTab == 0) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Vendor Dashboard",
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              dashboardCard("Total Vendors", vendors.length.toString(), Icons.store),
-              dashboardCard("Orders", orderCount.toString(), Icons.shopping_cart),
-              dashboardCard("Flagged", flaggedCount.toString(), Icons.flag),
-              dashboardCard("Feedbacks", feedbackCount.toString(), Icons.feedback),
-            ],
-          ),
-          SizedBox(height: 30),
-          Text(
-            "Recent Vendors",
-            style: TextStyle(fontSize: 20, color: Colors.white70),
-          ),
-          SizedBox(height: 10),
-          Expanded(
-            child: vendors.isEmpty
-                ? Center(
-                    child: Text(
-                      "No vendors yet.",
-                      style: TextStyle(color: Colors.white54),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: vendors.length,
-                    itemBuilder: (context, index) {
-                      final vendor = vendors[index];
-                      return Card(
-                        color: Color(0xFF1E1E1E),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        margin: EdgeInsets.symmetric(vertical: 8),
-                        child: ListTile(
-                          title: Text(vendor.name, style: TextStyle(color: Colors.white)),
-                          subtitle: Text(vendor.company, style: TextStyle(color: Colors.white70)),
-                          trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white54),
-                          onTap: () async {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => VendorDetailScreen(vendor: vendor),
-                              ),
-                            );
-                            if (result != null && result is Vendor) {
-                              setState(() {
-                                vendors[index] = result;
-                              });
-                            }
-                          },
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      );
+      return buildDashboardTab();
     } else if (selectedTab == 1) {
-      return OrderListScreen(vendors: vendors);
+      return OrderListScreen();
     } else if (selectedTab == 2) {
       return FeedbackListScreen(vendors: vendors);
     } else {
@@ -147,30 +99,121 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Widget buildDashboardTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Vendor Dashboard",
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            dashboardCard(
+              "Total Vendors",
+              vendors.length.toString(),
+              Icons.store,
+            ),
+            dashboardCard("Orders", orderCount.toString(), Icons.shopping_cart),
+            dashboardCard("Flagged", flaggedCount.toString(), Icons.flag),
+            dashboardCard(
+              "Feedbacks",
+              feedbackCount.toString(),
+              Icons.feedback,
+            ),
+          ],
+        ),
+        const SizedBox(height: 30),
+        const Text(
+          "Recent Vendors",
+          style: TextStyle(fontSize: 20, color: Colors.white70),
+        ),
+        const SizedBox(height: 10),
+        Expanded(
+          child: vendors.isEmpty
+              ? const Center(
+                  child: Text(
+                    "No vendors yet.",
+                    style: TextStyle(color: Colors.white54),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: vendors.length,
+                  itemBuilder: (context, index) {
+                    final vendor = vendors[index];
+                    return Card(
+                      color: const Color(0xFF1E1E1E),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      child: ListTile(
+                        title: Text(
+                          vendor.name,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        subtitle: Text(
+                          vendor.company,
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: Colors.white54,
+                        ),
+                        onTap: () async {
+                          final vendorBefore = vendors[index];
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => VendorDetailScreen(
+                                vendor: vendorBefore,
+                                onVendorUpdated: (updatedVendor) {
+                                  loadVendorsFromDB();
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
   Widget dashboardCard(String title, String value, IconData icon) {
     return Expanded(
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 8),
-        padding: EdgeInsets.all(16),
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Color(0xFF1E1E1E),
+          color: const Color(0xFF1E1E1E),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(icon, color: Colors.white70),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 22,
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 4),
-            Text(title, style: TextStyle(color: Colors.white54)),
+            const SizedBox(height: 4),
+            Text(title, style: const TextStyle(color: Colors.white54)),
           ],
         ),
       ),

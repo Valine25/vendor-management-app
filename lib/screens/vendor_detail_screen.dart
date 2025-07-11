@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import '../models/vendor.dart';
 import 'add_order_screen.dart';
 import 'add_feedback_screen.dart';
+import '../database/db_helper.dart';
 
 class VendorDetailScreen extends StatefulWidget {
   final Vendor vendor;
+  final Function(Vendor updatedVendor)? onVendorUpdated;
 
-  VendorDetailScreen({required this.vendor});
+  VendorDetailScreen({required this.vendor, this.onVendorUpdated});
 
   @override
   State<VendorDetailScreen> createState() => _VendorDetailScreenState();
@@ -22,15 +24,19 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
     vendor = widget.vendor;
   }
 
-  void toggleInactive() {
+  void toggleInactive() async{
     setState(() {
       vendor.isInactive = !vendor.isInactive;
       isChanged = true;
     });
+    await DBHelper().updateVendor(vendor);
   }
 
   Future<bool> _onWillPop() async {
-    Navigator.pop(context, isChanged ? vendor : null);
+    if (isChanged && widget.onVendorUpdated != null) {
+      widget.onVendorUpdated!(vendor);
+    }
+    Navigator.pop(context);
     return false;
   }
 
@@ -49,7 +55,7 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
               ),
               tooltip: vendor.isInactive ? "Unflag" : "Flag Inactive",
               onPressed: toggleInactive,
-            )
+            ),
           ],
         ),
         body: Padding(
@@ -74,17 +80,25 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
               if (vendor.orders.isEmpty)
                 Text("No orders yet.")
               else
-                ...vendor.orders.map((order) => Card(
-                      color: const Color(0xFF1E1E1E),
-                      child: ListTile(
-                        title: Text(order.product, style: TextStyle(color: Colors.white)),
-                        subtitle: Text(
-                          "Qty: ${order.quantity}, Date: ${order.date.toLocal().toString().split(' ')[0]}",
-                          style: TextStyle(color: Colors.white60),
-                        ),
-                        trailing: Text(order.status, style: TextStyle(color: Colors.tealAccent)),
+                ...vendor.orders.map(
+                  (order) => Card(
+                    color: const Color(0xFF1E1E1E),
+                    child: ListTile(
+                      title: Text(
+                        order.product,
+                        style: TextStyle(color: Colors.white),
                       ),
-                    )),
+                      subtitle: Text(
+                        "Qty: ${order.quantity}, Date: ${order.date.toLocal().toString().split(' ')[0]}",
+                        style: TextStyle(color: Colors.white60),
+                      ),
+                      trailing: Text(
+                        order.status,
+                        style: TextStyle(color: Colors.tealAccent),
+                      ),
+                    ),
+                  ),
+                ),
 
               SizedBox(height: 20),
 
@@ -100,9 +114,13 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
                         ),
                       );
                       if (result != null) {
-                        setState(() {
-                          isChanged = true;
-                        });
+                        final updated = await DBHelper().getVendorById(vendor.id!);
+                        if (updated != null) {
+                          setState(() {
+                            vendor = updated;
+                            isChanged = true;
+                          });
+                        }
                       }
                     },
                     icon: Icon(Icons.add_shopping_cart),
@@ -117,16 +135,20 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
                         ),
                       );
                       if (result != null) {
-                        setState(() {
-                          isChanged = true;
-                        });
+                        final updated = await DBHelper().getVendorById(vendor.id!);
+                        if (updated != null) {
+                          setState(() {
+                            vendor = updated;
+                            isChanged = true;
+                          });
+                        }
                       }
                     },
                     icon: Icon(Icons.feedback),
                     label: Text("Add Feedback"),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),

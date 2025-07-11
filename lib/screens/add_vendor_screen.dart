@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/vendor.dart';
 
 class AddVendorScreen extends StatefulWidget {
+  const AddVendorScreen({super.key});
+
   @override
   _AddVendorScreenState createState() => _AddVendorScreenState();
 }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import '../models/vendor.dart';
+import '../database/db_helper.dart';
 
 class AddFeedbackScreen extends StatefulWidget {
   final Vendor vendor;
 
-  AddFeedbackScreen({required this.vendor});
+  const AddFeedbackScreen({super.key, required this.vendor});
 
   @override
-  _AddFeedbackScreenState createState() => _AddFeedbackScreenState();
+    _AddFeedbackScreenState createState() => _AddFeedbackScreenState();
 }
 
 class _AddFeedbackScreenState extends State<AddFeedbackScreen> {
@@ -15,10 +16,14 @@ class _AddFeedbackScreenState extends State<AddFeedbackScreen> {
   final feedbackController = TextEditingController();
   int rating = 0;
 
-  void saveFeedback() {
+  void saveFeedback() async {
     if (_formKey.currentState!.validate()) {
       widget.vendor.feedback = feedbackController.text;
-      widget.vendor.rating = rating;
+      widget.vendor.rating = rating.toDouble();
+
+      await DBHelper().updateVendor(widget.vendor);
+
+      
       Navigator.pop(context, true);
     }
   }
@@ -40,6 +45,13 @@ class _AddFeedbackScreenState extends State<AddFeedbackScreen> {
         );
       }),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    feedbackController.text = widget.vendor.feedback;
+    rating = widget.vendor.rating.toInt();
   }
 
   @override
@@ -73,20 +85,27 @@ class _AddFeedbackScreenState extends State<AddFeedbackScreen> {
                 validator: (value) =>
                     value == null || value.isEmpty ? "Required" : null,
               ),
-              Center(child:SizedBox(height: 30,
-              child:ElevatedButton.icon(
-                onPressed: saveFeedback,
-                icon: Icon(Icons.send, size: 18),
-                label: Text("Submit", style: TextStyle(fontSize: 20)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurpleAccent,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              Center(
+                child: SizedBox(
+                  height: 38,
+                  width: 140,
+                  child: ElevatedButton.icon(
+                    onPressed: saveFeedback,
+                    icon: Icon(Icons.send, size: 18),
+                    label: Text("Submit", style: TextStyle(fontSize: 16)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurpleAccent,
+                      foregroundColor: Colors.white,
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 1,
+                    ),
                   ),
                 ),
-              ),),)
+              ),
             ],
           ),
         ),

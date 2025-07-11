@@ -1,14 +1,31 @@
 import 'package:flutter/material.dart';
 import '../models/vendor.dart';
+import '../database/db_helper.dart';
 
-class OrderListScreen extends StatelessWidget {
-  final List<Vendor> vendors;
+class OrderListScreen extends StatefulWidget {
+  @override
+  _OrderListScreenState createState() => _OrderListScreenState();
+}
 
-  OrderListScreen({required this.vendors});
+class _OrderListScreenState extends State<OrderListScreen> {
+  List<Vendor> _vendors = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVendors();
+  }
+
+  Future<void> _loadVendors() async {
+    final vendors = await DBHelper().getAllVendorsWithOrders(); 
+    setState(() {
+      _vendors = vendors;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final allOrders = vendors.expand((v) => v.orders).toList();
+    final allOrders = _vendors.expand((v) => v.orders).toList();
 
     return Scaffold(
       appBar: AppBar(title: Text("All Orders")),
@@ -24,7 +41,10 @@ class OrderListScreen extends StatelessWidget {
                   margin: EdgeInsets.all(8),
                   child: ListTile(
                     title: Text(order.product, style: TextStyle(color: Colors.white)),
-                    subtitle: Text("Qty: ${order.quantity}, Date: ${order.date.toLocal().toString().split(' ')[0]}", style: TextStyle(color: Colors.white70)),
+                    subtitle: Text(
+                      "Qty: ${order.quantity}, Date: ${order.date.toLocal().toString().split(' ')[0]}",
+                      style: TextStyle(color: Colors.white70),
+                    ),
                     trailing: Text(order.status, style: TextStyle(color: Colors.deepPurpleAccent)),
                   ),
                 );
